@@ -1,8 +1,7 @@
 import { Hono } from "hono";
-import { resizeImage, uploadToS3 } from "../utils";
+import { uploadToS3 } from "../utils";
 import { PrismaClient } from "@prisma/client/edge";
 import { withAccelerate } from "@prisma/extension-accelerate";
-import Image from "image-js";
 
 export const imageUploadRouter = new Hono<{
   Bindings: {
@@ -23,7 +22,6 @@ imageUploadRouter.post("/", async (c) => {
   try {
     const query = c.req.query();
     const body = await c.req.parseBody();
-    console.log(body.file, "Req body");
 
     const isResize = query.resize === "true";
 
@@ -32,13 +30,6 @@ imageUploadRouter.post("/", async (c) => {
     const BUCKET_REGION = c.env.BUCKET_REGION;
     const aws_access_key = c.env.AWS_ACCESS_KEY_ID;
     const aws_secret = c.env.AWS_SECRET_ACCESS_KEY;
-
-    // const accessKeyId = "";
-    // const secretAccessKey = c.env.AWS_SECRET_ACCESS_KEY || "";
-    // const bucket_name = c.env.BUCKET_NAME || "";
-    // const bucket_region = c.env.BUCKET_REGION || "";
-
-    // console.log(accessKeyId, secretAccessKey, bucket_name, bucket_region);
 
     const result = await uploadToS3(
       file,

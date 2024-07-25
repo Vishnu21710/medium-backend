@@ -191,7 +191,8 @@ saveListRouter.post("/unsave", async (c) => {
   });
 });
 
-saveListRouter.route("/:id").get(async (c) => {
+saveListRouter.route("/:id")
+.get(async (c) => {
   const db = new PrismaClient({
     datasourceUrl: c.env.DATABASE_URL,
   }).$extends(withAccelerate());
@@ -256,4 +257,65 @@ saveListRouter.route("/:id").get(async (c) => {
       msg: error,
     });
   }
-});
+})
+.delete(async (c)=>{
+  const db = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  const param = c.req.param()
+
+  try {
+    const deletedList = await db.saveList.delete({
+      where: {
+        id: parseInt(param.id),
+        user_id: c.get("userId")
+      }
+    })
+
+    return c.json(deletedList)
+  } catch (error) {
+    console.log(error);
+    c.status(400)
+    return c.json({
+      msg: "Failed to delete savelist"
+    })
+    
+  }
+})
+.put(async (c)=>{
+  const db = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+  
+  const params = c.req.param()
+  const save_list_id = parseInt(params.id)
+
+  const body = await c.req.json()
+  
+  try {
+    const updatedSaveList = await db.saveList.update({
+      where:{
+        id: save_list_id,
+        user_id: c.get("userId")
+      },
+      data:{
+        title: body.title,
+        posts: {
+          connect: body.connectPostId,
+          disconnect: body.disConnectPostId
+        }
+      }
+    })
+
+    return c.json(updatedSaveList)
+  } catch (error) {
+    console.log(error);
+    c.status(400)
+    return c.json({
+      msg: "Failed to update"
+    })
+    
+  }
+})
+
